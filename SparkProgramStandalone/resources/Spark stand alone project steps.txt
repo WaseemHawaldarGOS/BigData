@@ -1,0 +1,240 @@
+Error logs count handson
+========================
+Given file -> D:\JPMC-Data\SimplyLearn\samplefiles\server_log
+
+Find below use cases:
+number of errors
+number of php errors
+how many php/mysql errors happen between 2 dates
+
+Solution is available in D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\src\com\simplilearn\video4\ServerLogAnalysis.scala
+
+Steps followed to make it work.
+
+Spark 2.4.4 was installed using D:\JPMC-Data\Pluralsight-trainings\Apache spark fundamentals\Spark Installation.txt
+and SPARK_HOME was added to environment variables.
+
+Scala 2.11.11 was installed D:\JPMC-Data\Pluralsight-trainings\Scala-The-Big-Picture\Scala installation\Scala installation.txt
+and SCALA_HOME was added to environment variables.
+
+winutils was downloaded and added to D:\Softwares\Hadoop\bin
+and HADOOP_HOME was added to environment variables.
+
+Note: To know how spark and scala compatible version was derived refer to below appendix below logs.
+
+
+a.	Created a new project(SparkProgramStandalone) in intellij 
+	File new project -> LHS select Scala -> RHS select IDEA
+	Give project name
+	Scala SDK select 2.11.11
+	JDK select 1.8.0_211
+	click finish
+b. Right click on project and create directory lib
+c.  copy all the jars from spark home to lib folder of project 			D:\Softwares\spark-2.4.4-bin-hadoop2.6\spark-2.4.4-bin-hadoop2.6\jars and paste in lib folder of same intellij project.
+d. Next step is to add these jars to classpath to intellij.
+	a. File -> project structure -> Modules -> Dependencies -> click on '+' sign on RHS -> browse to project lib folder and select all the jars. Change the scope to jars to provided and select i.e. using check box all.
+e.	Once run it may fail with error like Exception in thread "main" java.lang.NoClassDefFoundError: org/apache/spark/SparkConf. Go to intellij edit/run configurations and check below option
+Include dependencies with "Provided" scope. 
+f.	Now create package as com.simplilearn.video4
+g. Create scala object as ServerLogAnalysis
+paste the code below:
+package com.simplilearn.video4
+import org.apache.spark.{SparkConf, SparkContext}
+object ServerLogAnalysis {
+
+  def main(args: Array[String]): Unit = {
+    /*
+    setMaster tells were spark is running. In case of cluster setMaster should be set to yarn.
+	For the sake of simplicity keep both object name and appname as same.
+    */
+    val sc = new SparkContext(new SparkConf().setAppName("ServerLogAnalysis").setMaster("local[2]"))
+    val logFile = "D://JPMC-Data//SimplyLearn//samplefiles//server_log"
+    val lines = sc.textFile(logFile)
+    val errors = lines.filter(_.startsWith("ERROR"))
+    val messages = errors.map(_.split("\t")).map(r => r(1))
+    messages.cache()
+    val tot = lines.count()
+    val mysql = messages.filter(_.contains("mysql")).count()
+    val php = messages.filter(_.contains("php")).count()
+    val rail = messages.filter(_.contains("RailsApp")).count()
+
+    println("Total msgs: %s, MYSQL errs: %s, PHP errs: %s, RAILS errs: %s, DONE errs: %s".format(tot, mysql,php,rail,(tot - (mysql+php+rail))))
+  }
+}
+h. Run the project and observe below logs.
+
+Output to note - Total msgs: 13, MYSQL errs: 1, PHP errs: 5, RAILS errs: 3, DONE errs: 4
+
+
+"C:\Program Files\Java\jdk1.8.0_211\bin\java.exe" "-javaagent:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2018.2.4\lib\idea_rt.jar=60244:C:\Program Files\JetBrains\IntelliJ IDEA Community Edition 2018.2.4\bin" -Dfile.encoding=UTF-8 -classpath "C:\Program Files\Java\jdk1.8.0_211\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\deploy.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\access-bridge-64.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\cldrdata.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\dnsns.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\jaccess.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\jfxrt.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\localedata.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\nashorn.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\sunec.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\sunjce_provider.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\sunmscapi.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\sunpkcs11.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\ext\zipfs.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\javaws.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\jfxswt.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\management-agent.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\plugin.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_211\jre\lib\rt.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\out\production\SparkProgramStandalone;C:\Program Files (x86)\scala\lib\scala-actors-2.11.0.jar;C:\Program Files (x86)\scala\lib\scala-actors-migration_2.11-1.1.0.jar;C:\Program Files (x86)\scala\lib\scala-library.jar;C:\Program Files (x86)\scala\lib\scala-parser-combinators_2.11-1.0.4.jar;C:\Program Files (x86)\scala\lib\scala-reflect.jar;C:\Program Files (x86)\scala\lib\scala-swing_2.11-1.0.2.jar;C:\Program Files (x86)\scala\lib\scala-xml_2.11-1.0.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-core_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-common-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-databind-2.6.7.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-annotations-2.6.7.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-core-2.6.7.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-core-asl-1.9.13.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-dataformat-yaml-2.6.7.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-jaxrs-1.9.13.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-mapper-asl-1.9.13.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-module-jaxb-annotations-2.6.7.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-module-paranamer-2.7.9.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-module-scala_2.11-2.6.7.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jackson-xc-1.9.13.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\avro-1.8.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\avro-ipc-1.8.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\avro-mapred-1.8.2-hadoop2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\bonecp-0.8.0.RELEASE.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\breeze-macros_2.11-0.13.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\breeze_2.11-0.13.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\calcite-avatica-1.2.0-incubating.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\calcite-core-1.2.0-incubating.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\calcite-linq4j-1.2.0-incubating.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\chill-java-0.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\chill_2.11-0.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-beanutils-1.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-cli-1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-codec-1.10.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-collections-3.2.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-compiler-3.0.9.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-compress-1.8.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-configuration-1.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-crypto-1.0.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-dbcp-1.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-digester-1.8.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-httpclient-3.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-io-2.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-lang-2.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-lang3-3.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-logging-1.1.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-math3-3.4.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-net-3.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\commons-pool-1.5.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\compress-lzf-1.0.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\core-1.1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\curator-client-2.6.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\curator-framework-2.6.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\curator-recipes-2.6.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\datanucleus-api-jdo-3.2.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\datanucleus-core-3.2.10.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\datanucleus-rdbms-3.2.9.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\derby-10.12.1.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\eigenbase-properties-1.1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\flatbuffers-1.2.0-3f79e055.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\generex-1.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\gson-2.2.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\guava-14.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\guice-3.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\guice-servlet-3.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-annotations-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-auth-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-hdfs-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-mapreduce-client-app-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-mapreduce-client-common-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-mapreduce-client-core-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-mapreduce-client-jobclient-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-mapreduce-client-shuffle-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-yarn-api-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-yarn-client-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-yarn-common-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-yarn-server-common-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hadoop-yarn-server-web-proxy-2.6.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hive-beeline-1.2.1.spark2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hive-cli-1.2.1.spark2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hive-exec-1.2.1.spark2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hive-jdbc-1.2.1.spark2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hive-metastore-1.2.1.spark2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hk2-api-2.4.0-b34.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hk2-locator-2.4.0-b34.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hk2-utils-2.4.0-b34.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\hppc-0.7.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\htrace-core-3.0.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\httpclient-4.5.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\httpcore-4.4.10.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\ivy-2.4.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\janino-3.0.9.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\JavaEWAH-0.3.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javassist-3.18.1-GA.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javax.annotation-api-1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javax.inject-1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javax.inject-2.4.0-b34.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javax.servlet-api-3.1.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javax.ws.rs-api-2.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\javolution-5.5.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jaxb-api-2.2.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jcl-over-slf4j-1.7.16.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jdo-api-3.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-client-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-common-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-container-servlet-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-container-servlet-core-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-guava-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-media-jaxb-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jersey-server-2.22.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jetty-6.1.26.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jetty-util-6.1.26.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jline-2.14.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\joda-time-2.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jodd-core-3.5.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jpam-1.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\json4s-ast_2.11-3.5.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\json4s-core_2.11-3.5.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\json4s-jackson_2.11-3.5.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\json4s-scalap_2.11-3.5.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jsr305-1.3.9.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jta-1.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jtransforms-2.4.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\jul-to-slf4j-1.7.16.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\kryo-shaded-4.0.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\kubernetes-client-4.1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\kubernetes-model-4.1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\kubernetes-model-common-4.1.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\leveldbjni-all-1.8.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\libfb303-0.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\libthrift-0.9.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\log4j-1.2.17.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\logging-interceptor-3.12.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\lz4-java-1.4.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\machinist_2.11-0.6.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\macro-compat_2.11-1.1.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\mesos-1.4.0-shaded-protobuf.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\metrics-core-3.1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\metrics-graphite-3.1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\metrics-json-3.1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\metrics-jvm-3.1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\minlog-1.3.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\netty-3.9.9.Final.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\netty-all-4.1.17.Final.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\objenesis-2.5.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\okhttp-3.8.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\okio-1.13.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\opencsv-2.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\orc-core-1.5.5-nohive.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\orc-mapreduce-1.5.5-nohive.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\orc-shims-1.5.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\oro-2.0.8.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\osgi-resource-locator-1.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\paranamer-2.8.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-column-1.10.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-common-1.10.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-encoding-1.10.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-format-2.4.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-hadoop-1.10.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-hadoop-bundle-1.6.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\parquet-jackson-1.10.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\protobuf-java-2.5.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\py4j-0.10.7.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\pyrolite-4.13.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\RoaringBitmap-0.7.45.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\scala-compiler-2.11.12.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\scala-library-2.11.12.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\scala-parser-combinators_2.11-1.1.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\scala-reflect-2.11.12.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\scala-xml_2.11-1.0.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\shapeless_2.11-2.3.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\shims-0.7.45.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\slf4j-api-1.7.16.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\slf4j-log4j12-1.7.16.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\snakeyaml-1.15.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\snappy-0.2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\snappy-java-1.1.7.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-catalyst_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-graphx_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-hive-thriftserver_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-hive_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-kubernetes_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-kvstore_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-launcher_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-mesos_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-mllib-local_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-mllib_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-network-common_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-network-shuffle_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-repl_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-sketch_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-sql_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-streaming_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-tags_2.11-2.4.4-tests.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-tags_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-unsafe_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spark-yarn_2.11-2.4.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spire-macros_2.11-0.13.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\spire_2.11-0.13.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\ST4-4.0.4.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\stax-api-1.0-2.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\stax-api-1.0.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\stream-2.7.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\stringtemplate-3.2.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\super-csv-2.2.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\univocity-parsers-2.7.3.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\validation-api-1.1.0.Final.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\xbean-asm6-shaded-4.8.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\xercesImpl-2.9.1.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\xmlenc-0.52.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\xz-1.5.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\zjsonpatch-0.3.0.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\zookeeper-3.4.6.jar;D:\JPMC-Data\SimplyLearn\workspace_simpilearn\SparkProgramStandalone\lib\zstd-jni-1.3.2-2.jar" com.simplilearn.video4.ServerLogAnalysis
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+19/09/19 11:36:28 INFO SparkContext: Running Spark version 2.4.4
+19/09/19 11:36:28 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+19/09/19 11:36:28 INFO SparkContext: Submitted application: Server Log Analyzer
+19/09/19 11:36:29 INFO SecurityManager: Changing view acls to: Waseem Hawaldar
+19/09/19 11:36:29 INFO SecurityManager: Changing modify acls to: Waseem Hawaldar
+19/09/19 11:36:29 INFO SecurityManager: Changing view acls groups to: 
+19/09/19 11:36:29 INFO SecurityManager: Changing modify acls groups to: 
+19/09/19 11:36:29 INFO SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users  with view permissions: Set(Waseem Hawaldar); groups with view permissions: Set(); users  with modify permissions: Set(Waseem Hawaldar); groups with modify permissions: Set()
+19/09/19 11:36:30 INFO Utils: Successfully started service 'sparkDriver' on port 60257.
+19/09/19 11:36:30 INFO SparkEnv: Registering MapOutputTracker
+19/09/19 11:36:30 INFO SparkEnv: Registering BlockManagerMaster
+19/09/19 11:36:30 INFO BlockManagerMasterEndpoint: Using org.apache.spark.storage.DefaultTopologyMapper for getting topology information
+19/09/19 11:36:30 INFO BlockManagerMasterEndpoint: BlockManagerMasterEndpoint up
+19/09/19 11:36:30 INFO DiskBlockManager: Created local directory at C:\Users\Waseem Hawaldar\AppData\Local\Temp\blockmgr-e5ccef92-d5b7-4292-8baf-5a7a63f1205a
+19/09/19 11:36:30 INFO MemoryStore: MemoryStore started with capacity 897.6 MB
+19/09/19 11:36:30 INFO SparkEnv: Registering OutputCommitCoordinator
+19/09/19 11:36:30 INFO Utils: Successfully started service 'SparkUI' on port 4040.
+19/09/19 11:36:30 INFO SparkUI: Bound SparkUI to 0.0.0.0, and started at http://LAPTOP-73SDSJCA:4040
+19/09/19 11:36:30 INFO Executor: Starting executor ID driver on host localhost
+19/09/19 11:36:30 INFO Utils: Successfully started service 'org.apache.spark.network.netty.NettyBlockTransferService' on port 60270.
+19/09/19 11:36:30 INFO NettyBlockTransferService: Server created on LAPTOP-73SDSJCA:60270
+19/09/19 11:36:30 INFO BlockManager: Using org.apache.spark.storage.RandomBlockReplicationPolicy for block replication policy
+19/09/19 11:36:30 INFO BlockManagerMaster: Registering BlockManager BlockManagerId(driver, LAPTOP-73SDSJCA, 60270, None)
+19/09/19 11:36:30 INFO BlockManagerMasterEndpoint: Registering block manager LAPTOP-73SDSJCA:60270 with 897.6 MB RAM, BlockManagerId(driver, LAPTOP-73SDSJCA, 60270, None)
+19/09/19 11:36:30 INFO BlockManagerMaster: Registered BlockManager BlockManagerId(driver, LAPTOP-73SDSJCA, 60270, None)
+19/09/19 11:36:30 INFO BlockManager: Initialized BlockManager: BlockManagerId(driver, LAPTOP-73SDSJCA, 60270, None)
+19/09/19 11:36:31 INFO MemoryStore: Block broadcast_0 stored as values in memory (estimated size 214.6 KB, free 897.4 MB)
+19/09/19 11:36:31 INFO MemoryStore: Block broadcast_0_piece0 stored as bytes in memory (estimated size 20.4 KB, free 897.4 MB)
+19/09/19 11:36:31 INFO BlockManagerInfo: Added broadcast_0_piece0 in memory on LAPTOP-73SDSJCA:60270 (size: 20.4 KB, free: 897.6 MB)
+19/09/19 11:36:31 INFO SparkContext: Created broadcast 0 from textFile at ServerLogAnalysis.scala:11
+19/09/19 11:36:32 INFO FileInputFormat: Total input paths to process : 1
+19/09/19 11:36:32 INFO SparkContext: Starting job: count at ServerLogAnalysis.scala:15
+19/09/19 11:36:32 INFO DAGScheduler: Got job 0 (count at ServerLogAnalysis.scala:15) with 2 output partitions
+19/09/19 11:36:32 INFO DAGScheduler: Final stage: ResultStage 0 (count at ServerLogAnalysis.scala:15)
+19/09/19 11:36:32 INFO DAGScheduler: Parents of final stage: List()
+19/09/19 11:36:32 INFO DAGScheduler: Missing parents: List()
+19/09/19 11:36:32 INFO DAGScheduler: Submitting ResultStage 0 (D://JPMC-Data//SimplyLearn//samplefiles//server_log MapPartitionsRDD[1] at textFile at ServerLogAnalysis.scala:11), which has no missing parents
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_1 stored as values in memory (estimated size 3.3 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_1_piece0 stored as bytes in memory (estimated size 2.0 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added broadcast_1_piece0 in memory on LAPTOP-73SDSJCA:60270 (size: 2.0 KB, free: 897.6 MB)
+19/09/19 11:36:32 INFO SparkContext: Created broadcast 1 from broadcast at DAGScheduler.scala:1161
+19/09/19 11:36:32 INFO DAGScheduler: Submitting 2 missing tasks from ResultStage 0 (D://JPMC-Data//SimplyLearn//samplefiles//server_log MapPartitionsRDD[1] at textFile at ServerLogAnalysis.scala:11) (first 15 tasks are for partitions Vector(0, 1))
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Adding task set 0.0 with 2 tasks
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 0.0 in stage 0.0 (TID 0, localhost, executor driver, partition 0, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 1.0 in stage 0.0 (TID 1, localhost, executor driver, partition 1, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO Executor: Running task 0.0 in stage 0.0 (TID 0)
+19/09/19 11:36:32 INFO Executor: Running task 1.0 in stage 0.0 (TID 1)
+19/09/19 11:36:32 INFO HadoopRDD: Input split: file:/D:/JPMC-Data/SimplyLearn/samplefiles/server_log:151+152
+19/09/19 11:36:32 INFO HadoopRDD: Input split: file:/D:/JPMC-Data/SimplyLearn/samplefiles/server_log:0+151
+19/09/19 11:36:32 INFO Executor: Finished task 0.0 in stage 0.0 (TID 0). 875 bytes result sent to driver
+19/09/19 11:36:32 INFO Executor: Finished task 1.0 in stage 0.0 (TID 1). 875 bytes result sent to driver
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 0.0 in stage 0.0 (TID 0) in 267 ms on localhost (executor driver) (1/2)
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 1.0 in stage 0.0 (TID 1) in 256 ms on localhost (executor driver) (2/2)
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Removed TaskSet 0.0, whose tasks have all completed, from pool 
+19/09/19 11:36:32 INFO DAGScheduler: ResultStage 0 (count at ServerLogAnalysis.scala:15) finished in 0.516 s
+19/09/19 11:36:32 INFO DAGScheduler: Job 0 finished: count at ServerLogAnalysis.scala:15, took 0.586305 s
+19/09/19 11:36:32 INFO SparkContext: Starting job: count at ServerLogAnalysis.scala:16
+19/09/19 11:36:32 INFO DAGScheduler: Got job 1 (count at ServerLogAnalysis.scala:16) with 2 output partitions
+19/09/19 11:36:32 INFO DAGScheduler: Final stage: ResultStage 1 (count at ServerLogAnalysis.scala:16)
+19/09/19 11:36:32 INFO DAGScheduler: Parents of final stage: List()
+19/09/19 11:36:32 INFO DAGScheduler: Missing parents: List()
+19/09/19 11:36:32 INFO DAGScheduler: Submitting ResultStage 1 (MapPartitionsRDD[5] at filter at ServerLogAnalysis.scala:16), which has no missing parents
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_2 stored as values in memory (estimated size 4.0 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_2_piece0 stored as bytes in memory (estimated size 2.3 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added broadcast_2_piece0 in memory on LAPTOP-73SDSJCA:60270 (size: 2.3 KB, free: 897.6 MB)
+19/09/19 11:36:32 INFO SparkContext: Created broadcast 2 from broadcast at DAGScheduler.scala:1161
+19/09/19 11:36:32 INFO DAGScheduler: Submitting 2 missing tasks from ResultStage 1 (MapPartitionsRDD[5] at filter at ServerLogAnalysis.scala:16) (first 15 tasks are for partitions Vector(0, 1))
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Adding task set 1.0 with 2 tasks
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 0.0 in stage 1.0 (TID 2, localhost, executor driver, partition 0, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 1.0 in stage 1.0 (TID 3, localhost, executor driver, partition 1, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO Executor: Running task 1.0 in stage 1.0 (TID 3)
+19/09/19 11:36:32 INFO Executor: Running task 0.0 in stage 1.0 (TID 2)
+19/09/19 11:36:32 INFO HadoopRDD: Input split: file:/D:/JPMC-Data/SimplyLearn/samplefiles/server_log:0+151
+19/09/19 11:36:32 INFO HadoopRDD: Input split: file:/D:/JPMC-Data/SimplyLearn/samplefiles/server_log:151+152
+19/09/19 11:36:32 INFO MemoryStore: Block rdd_4_1 stored as values in memory (estimated size 248.0 B, free 897.4 MB)
+19/09/19 11:36:32 INFO MemoryStore: Block rdd_4_0 stored as values in memory (estimated size 288.0 B, free 897.4 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added rdd_4_1 in memory on LAPTOP-73SDSJCA:60270 (size: 248.0 B, free: 897.6 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added rdd_4_0 in memory on LAPTOP-73SDSJCA:60270 (size: 288.0 B, free: 897.6 MB)
+19/09/19 11:36:32 INFO Executor: Finished task 1.0 in stage 1.0 (TID 3). 832 bytes result sent to driver
+19/09/19 11:36:32 INFO Executor: Finished task 0.0 in stage 1.0 (TID 2). 789 bytes result sent to driver
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 0.0 in stage 1.0 (TID 2) in 65 ms on localhost (executor driver) (1/2)
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 1.0 in stage 1.0 (TID 3) in 70 ms on localhost (executor driver) (2/2)
+19/09/19 11:36:32 INFO DAGScheduler: ResultStage 1 (count at ServerLogAnalysis.scala:16) finished in 0.086 s
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Removed TaskSet 1.0, whose tasks have all completed, from pool 
+19/09/19 11:36:32 INFO DAGScheduler: Job 1 finished: count at ServerLogAnalysis.scala:16, took 0.097611 s
+19/09/19 11:36:32 INFO SparkContext: Starting job: count at ServerLogAnalysis.scala:17
+19/09/19 11:36:32 INFO DAGScheduler: Got job 2 (count at ServerLogAnalysis.scala:17) with 2 output partitions
+19/09/19 11:36:32 INFO DAGScheduler: Final stage: ResultStage 2 (count at ServerLogAnalysis.scala:17)
+19/09/19 11:36:32 INFO DAGScheduler: Parents of final stage: List()
+19/09/19 11:36:32 INFO DAGScheduler: Missing parents: List()
+19/09/19 11:36:32 INFO DAGScheduler: Submitting ResultStage 2 (MapPartitionsRDD[6] at filter at ServerLogAnalysis.scala:17), which has no missing parents
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_3 stored as values in memory (estimated size 4.0 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_3_piece0 stored as bytes in memory (estimated size 2.3 KB, free 897.4 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added broadcast_3_piece0 in memory on LAPTOP-73SDSJCA:60270 (size: 2.3 KB, free: 897.6 MB)
+19/09/19 11:36:32 INFO SparkContext: Created broadcast 3 from broadcast at DAGScheduler.scala:1161
+19/09/19 11:36:32 INFO DAGScheduler: Submitting 2 missing tasks from ResultStage 2 (MapPartitionsRDD[6] at filter at ServerLogAnalysis.scala:17) (first 15 tasks are for partitions Vector(0, 1))
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Adding task set 2.0 with 2 tasks
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 0.0 in stage 2.0 (TID 4, localhost, executor driver, partition 0, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 1.0 in stage 2.0 (TID 5, localhost, executor driver, partition 1, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO Executor: Running task 0.0 in stage 2.0 (TID 4)
+19/09/19 11:36:32 INFO Executor: Running task 1.0 in stage 2.0 (TID 5)
+19/09/19 11:36:32 INFO BlockManager: Found block rdd_4_0 locally
+19/09/19 11:36:32 INFO Executor: Finished task 0.0 in stage 2.0 (TID 4). 746 bytes result sent to driver
+19/09/19 11:36:32 INFO BlockManager: Found block rdd_4_1 locally
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 0.0 in stage 2.0 (TID 4) in 20 ms on localhost (executor driver) (1/2)
+19/09/19 11:36:32 INFO Executor: Finished task 1.0 in stage 2.0 (TID 5). 789 bytes result sent to driver
+19/09/19 11:36:32 INFO TaskSetManager: Finished task 1.0 in stage 2.0 (TID 5) in 20 ms on localhost (executor driver) (2/2)
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Removed TaskSet 2.0, whose tasks have all completed, from pool 
+19/09/19 11:36:32 INFO DAGScheduler: ResultStage 2 (count at ServerLogAnalysis.scala:17) finished in 0.042 s
+19/09/19 11:36:32 INFO DAGScheduler: Job 2 finished: count at ServerLogAnalysis.scala:17, took 0.055639 s
+19/09/19 11:36:32 INFO SparkContext: Starting job: count at ServerLogAnalysis.scala:18
+19/09/19 11:36:32 INFO DAGScheduler: Got job 3 (count at ServerLogAnalysis.scala:18) with 2 output partitions
+19/09/19 11:36:32 INFO DAGScheduler: Final stage: ResultStage 3 (count at ServerLogAnalysis.scala:18)
+19/09/19 11:36:32 INFO DAGScheduler: Parents of final stage: List()
+19/09/19 11:36:32 INFO DAGScheduler: Missing parents: List()
+19/09/19 11:36:32 INFO DAGScheduler: Submitting ResultStage 3 (MapPartitionsRDD[7] at filter at ServerLogAnalysis.scala:18), which has no missing parents
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_4 stored as values in memory (estimated size 4.0 KB, free 897.3 MB)
+19/09/19 11:36:32 INFO MemoryStore: Block broadcast_4_piece0 stored as bytes in memory (estimated size 2.3 KB, free 897.3 MB)
+19/09/19 11:36:32 INFO BlockManagerInfo: Added broadcast_4_piece0 in memory on LAPTOP-73SDSJCA:60270 (size: 2.3 KB, free: 897.6 MB)
+19/09/19 11:36:32 INFO SparkContext: Created broadcast 4 from broadcast at DAGScheduler.scala:1161
+19/09/19 11:36:32 INFO DAGScheduler: Submitting 2 missing tasks from ResultStage 3 (MapPartitionsRDD[7] at filter at ServerLogAnalysis.scala:18) (first 15 tasks are for partitions Vector(0, 1))
+19/09/19 11:36:32 INFO TaskSchedulerImpl: Adding task set 3.0 with 2 tasks
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 0.0 in stage 3.0 (TID 6, localhost, executor driver, partition 0, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO TaskSetManager: Starting task 1.0 in stage 3.0 (TID 7, localhost, executor driver, partition 1, PROCESS_LOCAL, 7913 bytes)
+19/09/19 11:36:32 INFO Executor: Running task 1.0 in stage 3.0 (TID 7)
+19/09/19 11:36:32 INFO Executor: Running task 0.0 in stage 3.0 (TID 6)
+19/09/19 11:36:32 INFO BlockManager: Found block rdd_4_0 locally
+19/09/19 11:36:32 INFO Executor: Finished task 0.0 in stage 3.0 (TID 6). 789 bytes result sent to driver
+19/09/19 11:36:33 INFO BlockManager: Found block rdd_4_1 locally
+19/09/19 11:36:33 INFO Executor: Finished task 1.0 in stage 3.0 (TID 7). 746 bytes result sent to driver
+19/09/19 11:36:33 INFO TaskSetManager: Finished task 0.0 in stage 3.0 (TID 6) in 30 ms on localhost (executor driver) (1/2)
+19/09/19 11:36:33 INFO TaskSetManager: Finished task 1.0 in stage 3.0 (TID 7) in 30 ms on localhost (executor driver) (2/2)
+19/09/19 11:36:33 INFO TaskSchedulerImpl: Removed TaskSet 3.0, whose tasks have all completed, from pool 
+19/09/19 11:36:33 INFO DAGScheduler: ResultStage 3 (count at ServerLogAnalysis.scala:18) finished in 0.044 s
+19/09/19 11:36:33 INFO DAGScheduler: Job 3 finished: count at ServerLogAnalysis.scala:18, took 0.049766 s
+Total msgs: 13, MYSQL errs: 1, PHP errs: 5, RAILS errs: 3, DONE errs: 4
+19/09/19 11:36:33 INFO SparkContext: Invoking stop() from shutdown hook
+19/09/19 11:36:33 INFO SparkUI: Stopped Spark web UI at http://LAPTOP-73SDSJCA:4040
+19/09/19 11:36:33 INFO MapOutputTrackerMasterEndpoint: MapOutputTrackerMasterEndpoint stopped!
+19/09/19 11:36:33 INFO MemoryStore: MemoryStore cleared
+19/09/19 11:36:33 INFO BlockManager: BlockManager stopped
+19/09/19 11:36:33 INFO BlockManagerMaster: BlockManagerMaster stopped
+19/09/19 11:36:33 INFO OutputCommitCoordinator$OutputCommitCoordinatorEndpoint: OutputCommitCoordinator stopped!
+19/09/19 11:36:33 INFO SparkContext: Successfully stopped SparkContext
+19/09/19 11:36:33 INFO ShutdownHookManager: Shutdown hook called
+19/09/19 11:36:33 INFO ShutdownHookManager: Deleting directory C:\Users\Waseem Hawaldar\AppData\Local\Temp\spark-5f1e5c8a-a1bb-4cc9-9c81-856722f5446f
+
+Process finished with exit code 0
+
+
+*****************************************************************************************************************
+
+
+
+Note:
+scala version was changed from 2.12.8 to 2.11.11 using below steps
+==================================================================
+1. scala 2.12.8 was uninstalled using control panel.
+2. scala 2.11.11 was installed by following below document:
+D:\JPMC-Data\Pluralsight-trainings\Scala-The-Big-Picture\Scala installation\Scala installation.txt
+3. Open intellij and go to file->project structure->global library -> remove scala 2.12 and add 2.11.11.
+
+How did we derive that spark 4.4 requires scala 2.11.11
+======================================================
+When we open command prompt and type spark-shell2 it print the version of spark and scala being used.
+Same version of scala should be used.
+
+file-> project structure-> modules -> dependencies tab-> click on + add jars and select spark core jar.
+change the scope of jar to provided.
+
